@@ -183,6 +183,7 @@ tbody tr.dead{opacity:.5}
 }
 .badge.run{color:var(--accent);border-color:oklch(0.82 0.13 190 / .5);background:oklch(0.82 0.13 190 / .08)}
 .badge.gate{color:var(--gate);border-color:oklch(0.80 0.13 90 / .5);background:oklch(0.80 0.13 90 / .08)}
+.badge.hold{color:var(--agent);border-color:oklch(0.72 0.12 300 / .5);background:oklch(0.72 0.12 300 / .08)}
 .badge.dead{color:var(--danger);border-color:oklch(0.70 0.17 25 / .5);background:oklch(0.70 0.17 25 / .08)}
 .badge.done{color:var(--text-2);border-color:var(--line);background:var(--panel-2)}
 .val{font:700 12px/1 var(--mono)}
@@ -302,7 +303,7 @@ footer{
     <section class="panel" aria-labelledby="t-agents">
       <div class="panel-head">
         <h2 class="panel-title" id="t-agents">Агентная сеть u2</h2>
-        <span class="panel-hint">4 роли, разнесённая мотивация</span>
+        <span class="panel-hint">6 ролей, разнесённая мотивация</span>
       </div>
       <div class="agents" id="agents"></div>
     </section>
@@ -342,6 +343,7 @@ let STAGES = [
 const STATUS = {
   run:  { label: "в конвейере",  cls: "run"  },
   gate: { label: "на гейте",     cls: "gate" },
+  hold: { label: "ждёт человека", cls: "hold" },
   dead: { label: "отклонена",    cls: "dead" },
   done: { label: "передана",     cls: "done" },
 };
@@ -413,7 +415,7 @@ const el = (tag, cls, text) => {
 function renderStats() {
   const wrap = $("#stats");
   wrap.innerHTML = "";
-  const active = IDEAS.filter(i => i.status === "run" || i.status === "gate");
+  const active = IDEAS.filter(i => i.status === "run" || i.status === "gate" || i.status === "hold");
   const stats = [
     { num: active.length, label: "идей в работе", cls: "stat--accent" },
     { num: IDEAS.filter(i => i.status === "gate").length, label: "на гейтах", cls: "stat--gate" },
@@ -485,6 +487,7 @@ const FILTERS = [
   { id: "all",  label: "все" },
   { id: "run",  label: "в конвейере" },
   { id: "gate", label: "на гейте" },
+  { id: "hold", label: "ждут человека" },
   { id: "done", label: "переданы" },
   { id: "dead", label: "отклонены" },
 ];
