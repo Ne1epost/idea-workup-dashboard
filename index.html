@@ -254,8 +254,9 @@ footer{
     </div>
   </div>
   <div class="topbar-right">
+    <span class="chip" id="freshchip" title="источник и свежесть данных"><span class="dot" id="freshdot"></span><span id="freshtext">демо-срез</span></span>
     <span class="chip"><span class="dot pulse"></span>система активна</span>
-    <span class="chip">агентов: 4</span>
+    <span class="chip" id="agentcount">агентов: 4</span>
     <span class="clock" id="clock" aria-label="текущее время">--:--:--</span>
   </div>
 </header>
@@ -318,15 +319,15 @@ footer{
 </main>
 
 <footer>
-  <span>idea-workup u2 · демо-срез данных</span>
-  <span>стек: один index.html, vanilla HTML/CSS/JS, без сборки</span>
+  <span>idea-workup u2 · состояние системы: state.json (опрос каждые 15 с)</span>
+  <span>стек: index.html + state.json, vanilla HTML/CSS/JS, без сборки</span>
 </footer>
 <script>
 "use strict";
 
 /* ============ модель системы u2 (демо-срез) ============ */
 
-const STAGES = [
+let STAGES = [
   { id: 1, name: "Инициация",    norm: "0.5 д", gateAfter: null },
   { id: 2, name: "Скрининг",     norm: "1 д",   gateAfter: { id: "G1", label: "GO / NO-GO" } },
   { id: 3, name: "Анализ",       norm: "2 д",   gateAfter: null },
@@ -345,7 +346,7 @@ const STATUS = {
   done: { label: "передана",     cls: "done" },
 };
 
-const IDEAS = [
+let IDEAS = [
   { id: "IW-014", name: "Авто-переписывание карточек товара под SEO",
     why: "14k карточек, ручная вычитка", stage: 7, status: "run",
     value: "H", effort: 12, next: "A/B на 500 карточках, замер CTR в поиске маркетплейса" },
@@ -369,7 +370,7 @@ const IDEAS = [
     value: "M", effort: 14, next: "Владелец эффекта формулирует целевую метрику" },
 ];
 
-const AGENTS = [
+let AGENTS = [
   { glyph: "◈", name: "Оркестратор", role: "маршрутизация и SLA",
     mission: "Ведёт идеи по конвейеру, следит за нормами времени этапов, эскалирует зависания.",
     task: "распределяет 3 идеи по этапам, 1 эскалация на G2", busy: true },
@@ -384,7 +385,7 @@ const AGENTS = [
     task: "критерии приёмки IW-014 «SEO-карточки»", busy: false },
 ];
 
-const JOURNAL = [
+let JOURNAL = [
   { date: "04.11", was: "12 этапов конвейера", now: "9 этапов",
     why: "скрининг и анализ сливались в один шаг — дублирующие проверки, идеи зависали между этапами" },
   { date: "06.11", was: "гейты созвоном", now: "асинхронные гейты с вердиктом в журнале",
@@ -593,15 +594,72 @@ function tickClock() {
 }
 setInterval(tickClock, 1000);
 
-/* ============ старт ============ */
-renderStats();
-renderTrack();
-renderReadout();
-renderFilters();
-renderPortfolio();
-renderAgents();
-renderJournal();
+/* ============ живое состояние: state.json ============ */
+const POLL_MS = 15000;          // опрос источника состояния
+const STALE_MS = 10 * 60 * 1000; // старше 10 минут — данные считаем устаревшими
+let lastStamp = null;            // отпечаток последнего применённого состояния
+let liveOk = false;              // удалось ли хоть раз прочитать state.json
+
+function renderAll() {
+  renderStats();
+  renderTrack();
+  renderReadout();
+  renderFilters();
+  renderPortfolio();
+  renderAgents();
+  renderJournal();
+}
+
+function fmtTime(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? "?" : d.toLocaleTimeString("ru-RU", { hour12: false });
+}
+
+function renderFresh(updatedAt) {
+  const dot = $("#freshdot");
+  const txt = $("#freshtext");
+  if (!liveOk) {
+    dot.className = "dot";
+    dot.style.background = "var(--text-3)";
+    txt.textContent = "демо-срез · state.json не найден";
+    return;
+  }
+  const stale = updatedAt && (Date.now() - new Date(updatedAt).getTime() > STALE_MS);
+  dot.className = "dot" + (stale ? "" : " pulse");
+  dot.style.background = stale ? "var(--gate)" : "var(--accent)";
+  txt.textContent = stale
+    ? "устарело · " + fmtTime(updatedAt)
+    : "live · обновлено " + fmtTime(updatedAt);
+}
+
+async function refreshState() {
+  try {
+    const r = await fetch("state.json", { cache: "no-store" });
+    if (!r.ok) throw new Error("http " + r.status);
+    const data = await r.json();
+    liveOk = true;
+    renderFresh(data.updatedAt);
+    const stamp = JSON.stringify(data);
+    if (stamp === lastStamp) return;
+    lastStamp = stamp;
+    STAGES = Array.isArray(data.stages) && data.stages.length ? data.stages : STAGES;
+    IDEAS = Array.isArray(data.ideas) ? data.ideas : IDEAS;
+    AGENTS = Array.isArray(data.agents) ? data.agents : AGENTS;
+    JOURNAL = Array.isArray(data.journal) ? data.journal : JOURNAL;
+    if (selectedId && !IDEAS.some(i => i.id === selectedId)) selectedId = null;
+    $("#agentcount").textContent = "агентов: " + AGENTS.length;
+    renderAll();
+  } catch {
+    liveOk = false;
+    renderFresh(null);
+  }
+}
+
+/* ============ старт: сразу рисуем встроенный срез, затем живой источник ============ */
+renderAll();
 tickClock();
+refreshState();
+setInterval(refreshState, POLL_MS);
 </script>
 </body>
 </html>
