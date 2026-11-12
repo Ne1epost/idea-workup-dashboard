@@ -1,17 +1,74 @@
 {
   "version": "u2",
-  "updatedAt": "2026-11-12T13:37:40+03:00",
+  "updatedAt": "2026-11-12T13:42:25+03:00",
   "source": "seed",
   "stages": [
-    { "id": 1, "name": "Инициация", "norm": "0.5 д", "gateAfter": null },
-    { "id": 2, "name": "Скрининг", "norm": "1 д", "gateAfter": { "id": "G1", "label": "GO / NO-GO" } },
-    { "id": 3, "name": "Анализ", "norm": "2 д", "gateAfter": null },
-    { "id": 4, "name": "Стресс-тест", "norm": "1 д", "gateAfter": { "id": "G2", "label": "ВЫЖИЛА?" } },
-    { "id": 5, "name": "Ценность", "norm": "1 д", "gateAfter": null },
-    { "id": 6, "name": "Прототип", "norm": "3 д", "gateAfter": null },
-    { "id": 7, "name": "Валидация", "norm": "5 д", "gateAfter": { "id": "G3", "label": "ПОДТВЕРЖДЕНО?" } },
-    { "id": 8, "name": "Упаковка", "norm": "2 д", "gateAfter": null },
-    { "id": 9, "name": "Передача", "norm": "0.5 д", "gateAfter": { "id": "G4", "label": "В ПРОЕКТ" } }
+    {
+      "id": 1,
+      "name": "Инициация",
+      "norm": "0.5 д",
+      "gateAfter": null
+    },
+    {
+      "id": 2,
+      "name": "Скрининг",
+      "norm": "1 д",
+      "gateAfter": {
+        "id": "G1",
+        "label": "GO / NO-GO"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Анализ",
+      "norm": "2 д",
+      "gateAfter": null
+    },
+    {
+      "id": 4,
+      "name": "Стресс-тест",
+      "norm": "1 д",
+      "gateAfter": {
+        "id": "G2",
+        "label": "ВЫЖИЛА?"
+      }
+    },
+    {
+      "id": 5,
+      "name": "Ценность",
+      "norm": "1 д",
+      "gateAfter": null
+    },
+    {
+      "id": 6,
+      "name": "Прототип",
+      "norm": "3 д",
+      "gateAfter": null
+    },
+    {
+      "id": 7,
+      "name": "Валидация",
+      "norm": "5 д",
+      "gateAfter": {
+        "id": "G3",
+        "label": "ПОДТВЕРЖДЕНО?"
+      }
+    },
+    {
+      "id": 8,
+      "name": "Упаковка",
+      "norm": "2 д",
+      "gateAfter": null
+    },
+    {
+      "id": 9,
+      "name": "Передача",
+      "norm": "0.5 д",
+      "gateAfter": {
+        "id": "G4",
+        "label": "В ПРОЕКТ"
+      }
+    }
   ],
   "ideas": [],
   "agents": [
