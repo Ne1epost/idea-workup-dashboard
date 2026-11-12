@@ -1,1 +1,607 @@
-<REDACTED>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дашборд проработки идей — «От идеи до проекта»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* primitive */
+  --p-bg: oklch(0.155 0.012 255);
+  --p-panel: oklch(0.195 0.014 255);
+  --p-panel-2: oklch(0.23 0.016 255);
+  --p-line: oklch(0.30 0.018 255);
+  --p-text: oklch(0.92 0.008 240);
+  --p-text-2: oklch(0.70 0.02 245);
+  --p-text-3: oklch(0.55 0.02 245);
+  --p-accent: oklch(0.82 0.13 190);   /* signal cyan */
+  --p-amber: oklch(0.80 0.13 90);     /* gate amber */
+  --p-red: oklch(0.70 0.17 25);       /* kill red */
+  --p-violet: oklch(0.72 0.12 300);   /* agent violet */
+  /* semantic */
+  --bg: var(--p-bg);
+  --panel: var(--p-panel);
+  --panel-2: var(--p-panel-2);
+  --line: var(--p-line);
+  --text: var(--p-text);
+  --text-2: var(--p-text-2);
+  --text-3: var(--p-text-3);
+  --accent: var(--p-accent);
+  --gate: var(--p-amber);
+  --danger: var(--p-red);
+  --agent: var(--p-violet);
+  --radius: 10px;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font:16px/1.65 var(--sans);
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  min-height:100dvh;
+}
+a{color:var(--accent);text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+button{cursor:pointer;font:inherit;color:inherit;background:none;border:none}
+h1,h2,h3{line-height:1.2;text-wrap:balance}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px 24px;
+  background:oklch(0.175 0.014 255 / 0.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand svg{flex:none}
+.brand-name{font:700 15px/1.2 var(--mono);letter-spacing:.04em;text-transform:uppercase}
+.brand-sub{font:400 11px/1.2 var(--mono);color:var(--text-3);letter-spacing:.08em}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text-2);
+  padding:6px 10px;border:1px solid var(--line);border-radius:999px;
+  background:var(--panel);
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.dot.pulse{animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 oklch(0.82 0.13 190 / .55)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.clock{font:600 13px/1 var(--mono);color:var(--accent);font-variant-numeric:tabular-nums}
+
+/* ---------- layout ---------- */
+.layout{max-width:1440px;margin:0 auto;padding:24px;display:grid;gap:20px}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  min-width:0;
+}
+.panel-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.panel-title{font:600 13px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
+.panel-hint{font:400 11px/1.4 var(--mono);color:var(--text-3)}
+.panel-head .panel-hint{margin-left:auto;text-align:right}
+
+/* stats strip */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;
+}
+.stat-num{font:700 26px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.stat-label{font:500 10px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-top:4px}
+.stat--accent .stat-num{color:var(--accent)}
+.stat--gate .stat-num{color:var(--gate)}
+.stat--danger .stat-num{color:var(--danger)}
+
+/* ---------- pipeline ---------- */
+.track{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.stage{
+  position:relative;flex:1 1 96px;min-width:0;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+  padding:10px 10px 8px;
+  transition:border-color .2s ease-out, box-shadow .2s ease-out, transform .2s ease-out;
+}
+.stage-num{font:700 11px/1 var(--mono);color:var(--text-3)}
+.stage-name{font:600 13px/1.25 var(--sans);margin-top:5px;min-height:2.5em}
+.stage-norm{font:400 10px/1 var(--mono);color:var(--text-3);margin-top:5px}
+.stage-norm b{color:var(--text-2);font-weight:500}
+.stage-ideas{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;min-height:10px}
+.idea-dot{
+  width:10px;height:10px;border-radius:3px;
+  background:var(--line);border:1px solid var(--text-3);
+  transition:background .2s,border-color .2s,transform .2s;
+}
+.stage.on .idea-dot{background:var(--accent);border-color:var(--accent)}
+.stage.active{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px var(--accent), 0 0 18px oklch(0.82 0.13 190 / .22);
+  transform:translateY(-2px);
+}
+.stage.active .idea-dot.sel{transform:scale(1.5);box-shadow:0 0 8px var(--accent)}
+.gate{
+  flex:0 0 auto;align-self:center;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:6px 4px;
+}
+.gate-mark{
+  width:14px;height:14px;transform:rotate(45deg);
+  border:2px solid var(--gate);background:transparent;
+  transition:background .2s;
+}
+.gate.passed .gate-mark{background:var(--gate)}
+.gate-label{font:700 9px/1.2 var(--mono);letter-spacing:.08em;color:var(--gate);text-align:center;max-width:64px}
+.readout{
+  margin-top:16px;padding:14px 16px;border-radius:8px;
+  border:1px dashed var(--line);background:oklch(0.175 0.014 255);
+  font:400 13px/1.6 var(--sans);color:var(--text-2);
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+}
+.readout-tag{font:700 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);
+  padding:5px 8px;border:1px solid var(--accent);border-radius:5px;flex:none}
+.readout-title{font:600 14px/1.3 var(--sans);color:var(--text)}
+.readout-meta{font:400 11px/1.5 var(--mono);color:var(--text-3)}
+
+/* ---------- portfolio ---------- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filter{
+  font:500 11px/1 var(--mono);letter-spacing:.05em;
+  padding:7px 12px;border-radius:999px;border:1px solid var(--line);
+  color:var(--text-2);background:var(--panel-2);
+  transition:border-color .15s,color .15s,background .15s;
+}
+.filter:hover{border-color:var(--text-3);color:var(--text)}
+.filter.active{border-color:var(--accent);color:var(--accent);background:oklch(0.82 0.13 190 / .08)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{
+  font:500 10px/1.2 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);
+  text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+tbody td{padding:11px 12px;border-bottom:1px solid oklch(0.26 0.016 255);vertical-align:top}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:var(--panel-2)}
+tbody tr.sel{background:oklch(0.82 0.13 190 / .07);box-shadow:inset 2px 0 0 var(--accent)}
+tbody tr.dead{opacity:.5}
+.rowbtn{display:block;width:100%;text-align:left;cursor:pointer}
+.idea-name{font-weight:600;color:var(--text)}
+.idea-why{font:400 11px/1.5 var(--mono);color:var(--text-3);margin-top:2px}
+.num{font:500 12.5px/1.4 var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{
+  display:inline-block;font:600 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;
+  padding:5px 8px;border-radius:5px;border:1px solid;white-space:nowrap;
+}
+.badge.run{color:var(--accent);border-color:oklch(0.82 0.13 190 / .5);background:oklch(0.82 0.13 190 / .08)}
+.badge.gate{color:var(--gate);border-color:oklch(0.80 0.13 90 / .5);background:oklch(0.80 0.13 90 / .08)}
+.badge.dead{color:var(--danger);border-color:oklch(0.70 0.17 25 / .5);background:oklch(0.70 0.17 25 / .08)}
+.badge.done{color:var(--text-2);border-color:var(--line);background:var(--panel-2)}
+.val{font:700 12px/1 var(--mono)}
+.val.h{color:var(--accent)}.val.m{color:var(--gate)}.val.l{color:var(--text-3)}
+.next-step{font-size:12.5px;color:var(--text-2);max-width:34ch}
+.empty-row td{padding:24px;text-align:center;color:var(--text-3);font:400 12px/1.5 var(--mono)}
+
+/* ---------- two-column zone ---------- */
+.duo{display:grid;gap:20px;grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+@media (max-width:1023px){.duo{grid-template-columns:1fr}}
+
+/* ---------- agents ---------- */
+.agents{display:grid;gap:12px}
+.agent-card{
+  display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:start;
+  padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);
+  transition:border-color .2s;
+}
+.agent-card:hover{border-color:var(--text-3)}
+.agent-glyph{
+  width:44px;height:44px;border-radius:8px;display:grid;place-items:center;
+  background:oklch(0.72 0.12 300 / .1);border:1px solid oklch(0.72 0.12 300 / .4);
+  color:var(--agent);flex:none;
+}
+.agent-name{font:600 14px/1.2 var(--sans)}
+.agent-role{font:500 10px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-top:2px}
+.agent-mission{font-size:12.5px;color:var(--text-2);margin-top:7px}
+.agent-task{font:400 11.5px/1.5 var(--mono);color:var(--accent);margin-top:7px}
+.agent-task::before{content:"▸ ";color:var(--text-3)}
+.agent-status{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.status-dot{width:9px;height:9px;border-radius:50%}
+.status-dot.busy{background:var(--accent);animation:pulse 1.8s ease-out infinite}
+.status-dot.idle{background:var(--text-3)}
+.status-label{font:500 9px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+
+/* ---------- journal ---------- */
+.journal{display:grid;gap:10px}
+.entry{
+  display:grid;grid-template-columns:92px 1fr;gap:16px;
+  padding:13px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);
+}
+@media (max-width:639px){.entry{grid-template-columns:1fr;gap:8px}}
+.entry-date{font:500 11px/1.5 var(--mono);color:var(--text-3);white-space:nowrap}
+.entry-change{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13.5px}
+.entry-was{color:var(--text-2)}
+.entry-was s{text-decoration-color:var(--danger)}
+.entry-arrow{color:var(--accent);font-family:var(--mono);font-weight:700}
+.entry-now{color:var(--text);font-weight:600}
+.entry-why{font:400 12px/1.6 var(--mono);color:var(--text-3);margin-top:7px}
+.entry-why::before{content:"причина: ";color:var(--danger);text-transform:uppercase;font-size:10px;letter-spacing:.08em}
+
+footer{
+  max-width:1440px;margin:0 auto;padding:8px 24px 32px;
+  font:400 11px/1.6 var(--mono);color:var(--text-3);
+  display:flex;gap:16px;flex-wrap:wrap;
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+      <rect x="2" y="2" width="26" height="26" rx="6" fill="none" stroke="oklch(0.82 0.13 190)" stroke-width="2"/>
+      <path d="M8 15h4l2.5-5 3 10 2.5-5H22" fill="none" stroke="oklch(0.82 0.13 190)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <div class="brand-name">Idea-Workup · u2</div>
+      <div class="brand-sub">мультиагентная система «от идеи до проекта»</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="chip"><span class="dot pulse"></span>система активна</span>
+    <span class="chip">агентов: 4</span>
+    <span class="clock" id="clock" aria-label="текущее время">--:--:--</span>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- stats -->
+  <section class="stats" aria-label="сводка портфеля" id="stats"></section>
+
+  <!-- pipeline -->
+  <section class="panel" aria-labelledby="t-pipeline">
+    <div class="panel-head">
+      <h2 class="panel-title" id="t-pipeline">Конвейер проработки</h2>
+      <span class="panel-hint">9 этапов · 4 гейта · нормы в рабочих днях · клик по идее в портфеле подсвечивает её позицию</span>
+    </div>
+    <div class="track" id="track"></div>
+    <div class="readout" id="readout" aria-live="polite">
+      <span class="readout-tag">выбор</span>
+      <span>Идея не выбрана — кликните строку в портфеле, чтобы увидеть её позицию на конвейере.</span>
+    </div>
+  </section>
+
+  <!-- portfolio + agents -->
+  <div class="duo">
+    <section class="panel" aria-labelledby="t-portfolio">
+      <div class="panel-head">
+        <h2 class="panel-title" id="t-portfolio">Портфель идей</h2>
+        <span class="panel-hint">ценность × трудоёмкость → приоритет на гейтах</span>
+      </div>
+      <div class="filters" id="filters" role="group" aria-label="фильтр портфеля"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Идея</th><th>Позиция</th><th>Статус</th>
+              <th>Ценность</th><th>Трудоёмкость</th><th>Следующий шаг</th>
+            </tr>
+          </thead>
+          <tbody id="portfolio"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="t-agents">
+      <div class="panel-head">
+        <h2 class="panel-title" id="t-agents">Агентная сеть u2</h2>
+        <span class="panel-hint">4 роли, разнесённая мотивация</span>
+      </div>
+      <div class="agents" id="agents"></div>
+    </section>
+  </div>
+
+  <!-- journal -->
+  <section class="panel" aria-labelledby="t-journal">
+    <div class="panel-head">
+      <h2 class="panel-title" id="t-journal">Журнал решений</h2>
+      <span class="panel-hint">формат: было → стало → причина</span>
+    </div>
+    <div class="journal" id="journal"></div>
+  </section>
+</main>
+
+<footer>
+  <span>idea-workup u2 · демо-срез данных</span>
+  <span>стек: один index.html, vanilla HTML/CSS/JS, без сборки</span>
+</footer>
+<script>
+"use strict";
+
+/* ============ модель системы u2 (демо-срез) ============ */
+
+const STAGES = [
+  { id: 1, name: "Инициация",    norm: "0.5 д", gateAfter: null },
+  { id: 2, name: "Скрининг",     norm: "1 д",   gateAfter: { id: "G1", label: "GO / NO-GO" } },
+  { id: 3, name: "Анализ",       norm: "2 д",   gateAfter: null },
+  { id: 4, name: "Стресс-тест",  norm: "1 д",   gateAfter: { id: "G2", label: "ВЫЖИЛА?" } },
+  { id: 5, name: "Ценность",     norm: "1 д",   gateAfter: null },
+  { id: 6, name: "Прототип",     norm: "3 д",   gateAfter: null },
+  { id: 7, name: "Валидация",    norm: "5 д",   gateAfter: { id: "G3", label: "ПОДТВЕРЖДЕНО?" } },
+  { id: 8, name: "Упаковка",     norm: "2 д",   gateAfter: null },
+  { id: 9, name: "Передача",     norm: "0.5 д", gateAfter: { id: "G4", label: "В ПРОЕКТ" } },
+];
+
+const STATUS = {
+  run:  { label: "в конвейере",  cls: "run"  },
+  gate: { label: "на гейте",     cls: "gate" },
+  dead: { label: "отклонена",    cls: "dead" },
+  done: { label: "передана",     cls: "done" },
+};
+
+const IDEAS = [
+  { id: "IW-014", name: "Авто-переписывание карточек товара под SEO",
+    why: "14k карточек, ручная вычитка", stage: 7, status: "run",
+    value: "H", effort: 12, next: "A/B на 500 карточках, замер CTR в поиске маркетплейса" },
+  { id: "IW-011", name: "Прогноз спроса по маркетплейсам",
+    why: "закупка вслепую, кассовые разрывы", stage: 4, status: "gate",
+    value: "H", effort: 20, next: "Гейт G2: Критик готовит вердикт по контрпримерам" },
+  { id: "IW-018", name: "Динамические бандлы на марже",
+    why: "средний чек стоит 3 квартала", stage: 2, status: "run",
+    value: "M", effort: 8, next: "Скрининг: оценка данных по связанным покупкам" },
+  { id: "IW-009", name: "Генератор A/B-гипотез из отзывов",
+    why: "гипотезы берут «из головы»", stage: 3, status: "run",
+    value: "H", effort: 10, next: "Аналитик: корпус отзывов → карта болей" },
+  { id: "IW-003", name: "Алерты аномалий конверсии",
+    why: "просадки замечают через неделю", stage: 9, status: "done",
+    value: "M", effort: 6, next: "Передана в проект: запуск мониторинга 18.11" },
+  { id: "IW-006", name: "Прайс-монитор конкурентов",
+    why: "не знаем свою позицию по цене", stage: 4, status: "dead",
+    value: "L", effort: 15, next: "Отклонена на G2: готовые SaaS дешевле разработки" },
+  { id: "IW-021", name: "Чат-консьерж для B2B-закупок",
+    why: "40% входящих теряется ночью", stage: 5, status: "run",
+    value: "M", effort: 14, next: "Владелец эффекта формулирует целевую метрику" },
+];
+
+const AGENTS = [
+  { glyph: "◈", name: "Оркестратор", role: "маршрутизация и SLA",
+    mission: "Ведёт идеи по конвейеру, следит за нормами времени этапов, эскалирует зависания.",
+    task: "распределяет 3 идеи по этапам, 1 эскалация на G2", busy: true },
+  { glyph: "◉", name: "Аналитик идеи", role: "данные и юнит-экономика",
+    mission: "Собирает рынок, данные и экономику идеи; отвечает «стоит ли вообще смотреть».",
+    task: "юнит-экономика IW-009 «Генератор A/B-гипотез»", busy: true },
+  { glyph: "◍", name: "Критик", role: "стресс-тест",
+    mission: "Ищет контрпримеры и слабые места; его «убийство» идеи — экономия бюджета.",
+    task: "стресс-тест IW-011 «Прогноз спроса»", busy: true },
+  { glyph: "◎", name: "Владелец эффекта", role: "метрики и приёмка",
+    mission: "Фиксирует целевую метрику и критерии приёмки; отвечает за бизнес-эффект, не за фичи.",
+    task: "критерии приёмки IW-014 «SEO-карточки»", busy: false },
+];
+
+const JOURNAL = [
+  { date: "04.11", was: "12 этапов конвейера", now: "9 этапов",
+    why: "скрининг и анализ сливались в один шаг — дублирующие проверки, идеи зависали между этапами" },
+  { date: "06.11", was: "гейты созвоном", now: "асинхронные гейты с вердиктом в журнале",
+    why: "очередь из 14 идей ждала weekly-созвон; гейт перестал быть узким местом" },
+  { date: "08.11", was: "один агент-универсал", now: "4 роли: Оркестратор, Аналитик, Критик, Владелец эффекта",
+    why: "конфликт мотиваций: анализ и критика «в одной голове» приглушали друг друга" },
+  { date: "10.11", was: "оценка «нравится / не нравится»", now: "ценность × трудоёмкость (H/M/L × дни)",
+    why: "субъективные споры на гейтах сменились сравнимой матрицей приоритетов" },
+];
+
+/* ============ состояние ============ */
+let selectedId = null;
+let filter = "all";
+
+/* ============ helpers ============ */
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+};
+
+/* ============ рендер: сводка ============ */
+function renderStats() {
+  const wrap = $("#stats");
+  wrap.innerHTML = "";
+  const active = IDEAS.filter(i => i.status === "run" || i.status === "gate");
+  const stats = [
+    { num: active.length, label: "идей в работе", cls: "stat--accent" },
+    { num: IDEAS.filter(i => i.status === "gate").length, label: "на гейтах", cls: "stat--gate" },
+    { num: IDEAS.filter(i => i.status === "dead").length, label: "отклонено", cls: "stat--danger" },
+    { num: IDEAS.filter(i => i.status === "done").length, label: "передано в проекты", cls: "" },
+    { num: "12.5 д", label: "норма полного цикла", cls: "" },
+  ];
+  for (const s of stats) {
+    const box = el("div", "stat" + (s.cls ? " " + s.cls : ""));
+    box.append(el("div", "stat-num", s.num), el("div", "stat-label", s.label));
+    wrap.append(box);
+  }
+}
+
+/* ============ рендер: конвейер ============ */
+function renderTrack() {
+  const track = $("#track");
+  track.innerHTML = "";
+  for (const stage of STAGES) {
+    const ideasHere = IDEAS.filter(i => i.stage === stage.id && i.status !== "dead");
+    const node = el("div", "stage" + (ideasHere.length ? " on" : "") +
+      (selectedId && IDEAS.find(i => i.id === selectedId)?.stage === stage.id ? " active" : ""));
+    node.append(
+      el("div", "stage-num", String(stage.id).padStart(2, "0")),
+      el("div", "stage-name", stage.name),
+    );
+    const norm = el("div", "stage-norm");
+    norm.append("норма ", Object.assign(el("b"), { textContent: stage.norm }));
+    node.append(norm);
+    const dots = el("div", "stage-ideas");
+    for (const idea of ideasHere) {
+      const d = el("span", "idea-dot" + (idea.id === selectedId ? " sel" : ""));
+      d.title = idea.id + " · " + idea.name;
+      dots.append(d);
+    }
+    node.append(dots);
+    track.append(node);
+
+    if (stage.gateAfter) {
+      const g = el("div", "gate");
+      g.append(el("span", "gate-mark"), el("span", "gate-label", stage.gateAfter.id));
+      g.title = stage.gateAfter.label;
+      track.append(g);
+    }
+  }
+}
+
+/* ============ рендер: readout ============ */
+function renderReadout() {
+  const box = $("#readout");
+  const idea = IDEAS.find(i => i.id === selectedId);
+  box.innerHTML = "";
+  box.append(el("span", "readout-tag", "выбор"));
+  if (!idea) {
+    box.append(el("span", null, "Идея не выбрана — кликните строку в портфеле, чтобы увидеть её позицию на конвейере."));
+    return;
+  }
+  const stage = STAGES.find(s => s.id === idea.stage);
+  const title = el("span", "readout-title", idea.id + " · " + idea.name);
+  const gate = stage.gateAfter ? " → далее гейт " + stage.gateAfter.id + " «" + stage.gateAfter.label + "»" : "";
+  const meta = el("span", "readout-meta",
+    "этап " + stage.id + "/9 «" + stage.name + "» (норма " + stage.norm + ")" + gate +
+    " · статус: " + STATUS[idea.status].label + " · следующий шаг: " + idea.next);
+  box.append(title, meta);
+}
+
+/* ============ рендер: портфель ============ */
+const FILTERS = [
+  { id: "all",  label: "все" },
+  { id: "run",  label: "в конвейере" },
+  { id: "gate", label: "на гейте" },
+  { id: "done", label: "переданы" },
+  { id: "dead", label: "отклонены" },
+];
+
+function renderFilters() {
+  const wrap = $("#filters");
+  wrap.innerHTML = "";
+  for (const f of FILTERS) {
+    const b = el("button", "filter" + (filter === f.id ? " active" : ""), f.label);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(filter === f.id));
+    b.addEventListener("click", () => { filter = f.id; renderFilters(); renderPortfolio(); });
+    wrap.append(b);
+  }
+}
+
+function renderPortfolio() {
+  const body = $("#portfolio");
+  body.innerHTML = "";
+  const list = IDEAS.filter(i => filter === "all" || i.status === filter);
+  if (!list.length) {
+    const tr = el("tr", "empty-row");
+    const td = el("td", null, "под фильтр ничего не попало");
+    td.colSpan = 6;
+    tr.append(td);
+    body.append(tr);
+    return;
+  }
+  for (const idea of list) {
+    const tr = el("tr",
+      (idea.id === selectedId ? "sel " : "") + (idea.status === "dead" ? "dead" : ""));
+    const name = el("td");
+    const inner = el("button", "rowbtn");
+    inner.type = "button";
+    inner.setAttribute("aria-label", "выбрать идею " + idea.id);
+    inner.append(el("div", "idea-name", idea.name), el("div", "idea-why", idea.id + " · " + idea.why));
+    inner.addEventListener("click", () => selectIdea(idea.id));
+    name.append(inner);
+
+    const pos = el("td", "num", "этап " + idea.stage + "/9");
+    const st = el("td");
+    st.append(el("span", "badge " + STATUS[idea.status].cls, STATUS[idea.status].label));
+    const val = el("td");
+    val.append(el("span", "val " + idea.value.toLowerCase(), idea.value));
+    const eff = el("td", "num", idea.effort + " д");
+    const nxt = el("td");
+    nxt.append(el("div", "next-step", idea.next));
+
+    tr.append(name, pos, st, val, eff, nxt);
+    body.append(tr);
+  }
+}
+
+function selectIdea(id) {
+  selectedId = (selectedId === id) ? null : id;
+  renderTrack();
+  renderReadout();
+  renderPortfolio();
+}
+
+/* ============ рендер: агенты ============ */
+function renderAgents() {
+  const wrap = $("#agents");
+  wrap.innerHTML = "";
+  for (const a of AGENTS) {
+    const card = el("article", "agent-card");
+    const glyph = el("div", "agent-glyph", a.glyph);
+    glyph.setAttribute("aria-hidden", "true");
+    const main = el("div");
+    main.append(
+      el("div", "agent-name", a.name),
+      el("div", "agent-role", a.role),
+      el("p", "agent-mission", a.mission),
+      el("div", "agent-task", a.task),
+    );
+    const status = el("div", "agent-status");
+    status.append(
+      el("span", "status-dot " + (a.busy ? "busy" : "idle")),
+      el("span", "status-label", a.busy ? "занят" : "ожидает"),
+    );
+    card.append(glyph, main, status);
+    wrap.append(card);
+  }
+}
+
+/* ============ рендер: журнал ============ */
+function renderJournal() {
+  const wrap = $("#journal");
+  wrap.innerHTML = "";
+  for (const e of JOURNAL) {
+    const row = el("article", "entry");
+    row.append(el("div", "entry-date", e.date));
+    const body = el("div");
+    const change = el("div", "entry-change");
+    const was = el("span", "entry-was");
+    was.append(el("s", null, e.was));
+    change.append(was, el("span", "entry-arrow", "→"), el("span", "entry-now", e.now));
+    body.append(change, el("div", "entry-why", e.why));
+    row.append(body);
+    wrap.append(row);
+  }
+}
+
+/* ============ часы ============ */
+function tickClock() {
+  $("#clock").textContent = new Date().toLocaleTimeString("ru-RU", { hour12: false });
+}
+setInterval(tickClock, 1000);
+
+/* ============ старт ============ */
+renderStats();
+renderTrack();
+renderReadout();
+renderFilters();
+renderPortfolio();
+renderAgents();
+renderJournal();
+tickClock();
+</script>
+</body>
+</html>
